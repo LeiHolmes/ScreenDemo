@@ -1,10 +1,16 @@
 package com.sherlockxu.screendemo;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.media.MediaRecorder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -29,6 +35,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private MediaRecorder mRecorder = null;
     private String soundFileName = "";
     private boolean isStart = false;
+    // 要申请的权限
+    private String[] permissions = {Manifest.permission.INTERNET,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.WAKE_LOCK,
+            Manifest.permission.ACCESS_NETWORK_STATE, Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.ACCESS_WIFI_STATE, Manifest.permission.READ_CONTACTS,
+            Manifest.permission.RECORD_AUDIO, Manifest.permission.MOUNT_UNMOUNT_FILESYSTEMS};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +61,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         recorder.setForceSoftwareEncoding(true, true);
         // 设置监听回调 有问题：会导致文件打不开
 //        recorder.setMediaOutput(output);
+        requestPermission();//请求权限
 
         initView();
         initSoundData();
@@ -199,4 +212,30 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         }
     };
+
+    /**
+     * 6.0以上动态申请权限
+     */
+    public void requestPermission() {
+        // 版本判断。当手机系统大于 23 时，才有必要去判断权限是否获取
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            for (int i = 0; i < permissions.length; i++) {
+                int permissionStatus = ContextCompat.checkSelfPermission(this, permissions[i]);
+                // 权限是否已经 授权 GRANTED---授权  DINIED---拒绝
+                if (permissionStatus != PackageManager.PERMISSION_GRANTED) {
+                    // 如果没有授予该权限，就去提示用户请求
+                    ActivityCompat.requestPermissions(this, permissions, 110);
+                    break;
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 110) {
+
+        }
+    }
 }
