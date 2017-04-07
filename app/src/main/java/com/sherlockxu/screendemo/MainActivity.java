@@ -46,35 +46,43 @@ public class MainActivity extends Activity implements View.OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        requestPermission();
+        initRecord();
+        initSoundData();
+        initView();
+        initListener();
+    }
 
+    /**
+     * 初始化录屏
+     */
+    private void initRecord() {
         recorder = new SystemRecorder(this, APP_KEY, APP_SECRET);
-//        recorder = new ViewRecorder(findViewById(R.id.action_container), "1bd81b4808ec4", "91a1c41c80cbc11aba920eaa83992ffb");
         // 设置视频的最大尺寸
         recorder.setMaxFrameSize(Recorder.LevelMaxFrameSize.LEVEL_1920_1080);
         // 设置视频的质量（高、中、低）
-        recorder.setVideoQuality(Recorder.LevelVideoQuality.LEVEL_VERY_HIGH);
+        recorder.setVideoQuality(Recorder.LevelVideoQuality.LEVEL_SUPER_HIGH);
         // 设置视频的最短时长
         recorder.setMinDuration(3 * 1000);
         // 设置视频的输出路径
         recorder.setCacheFolder("/sdcard" + VIDEO_PATH);
         // 设置是否强制使用软件编码器对视频进行编码（兼容性更高）
-        recorder.setForceSoftwareEncoding(true, true);
+        // 但都设置为true后会导致最后1-2秒的丢失，可能是由于开启软件编码器压缩视频会导致丢失
+        recorder.setForceSoftwareEncoding(false, false);
         // 设置监听回调 有问题：会导致文件打不开
 //        recorder.setMediaOutput(output);
-        requestPermission();//请求权限
-
-        initView();
-        initSoundData();
-        initListener();
     }
 
+    /**
+     * 初始化录音文件
+     */
     private void initSoundData() {
         soundFileName = Environment.getExternalStorageDirectory().getPath() + SOUND_PATH;
         File file = new File(soundFileName);
         if (!file.exists()) {
             file.mkdirs();
         }
-        soundFileName += "/sound1.3gp";
+        soundFileName += "/sound1.mp4";
     }
 
     private void initView() {
@@ -99,7 +107,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     //开始录屏
                     if (recorder.isAvailable()) {
                         recorder.start();
-//                    recorder.startRecorder();
                     } else {
                         Toast.makeText(MainActivity.this, "录屏isNotAvailable", Toast.LENGTH_SHORT).show();
                     }
@@ -115,35 +122,28 @@ public class MainActivity extends Activity implements View.OnClickListener {
                         Log.e("show_media", "prepare() failed");
                     }
                     mRecorder.start();
-                    Log.e("show_media", "录屏录音开始");
                     isStart = true;
+
+                    Toast.makeText(this, "开始录屏录音", Toast.LENGTH_SHORT).show();
                 }
                 break;
             case R.id.end:
-                //停止录屏
                 if (isStart) {
+                    //停止录屏
                     if (recorder.isAvailable()) {
-//                        start.postDelayed(new Runnable() {
-//                            @Override
-//                            public void run() {
                         recorder.stop();
-//                    recorder.stopRecorder();
-//                    recorder.showShare();  
-//                            }
-//                        }, 1000);
                     } else {
                         Toast.makeText(MainActivity.this, "录屏isNotAvailable", Toast.LENGTH_SHORT).show();
                     }
-
                     //停止录音
                     mRecorder.stop();
                     mRecorder.release();
                     mRecorder = null;
-                    Log.e("show_media", "录屏录音停止");
                     isStart = false;
+                    Toast.makeText(this, "停止录屏录音", Toast.LENGTH_SHORT).show();
                 }
                 break;
-            case R.id.show:
+            case R.id.show://跳转播放录屏Activity
                 startActivity(new Intent(this, ShowMediaActivity.class));
                 break;
         }
@@ -156,7 +156,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         //判断sd卡是否存在
         if (Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED)) {
             File sdcardDir = Environment.getExternalStorageDirectory();
-
+            //清除视频缓存
             String file_path = sdcardDir.getPath() + VIDEO_PATH;
             File file = new File(file_path);
             if (!file.exists()) {
@@ -167,7 +167,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     file_list[i].delete();
                 }
             }
-
+            //清除音频缓存
             String file_path1 = sdcardDir.getPath() + SOUND_PATH;
             File file1 = new File(file_path1);
             if (!file1.exists()) {
@@ -180,7 +180,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
             }
         }
     }
-
+    
+    //录屏回调
     MediaOutput output = new MediaOutput() {
         @Override
         public void onStart() {
@@ -235,7 +236,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 110) {
-
+            //请求权限回调
         }
     }
 }
