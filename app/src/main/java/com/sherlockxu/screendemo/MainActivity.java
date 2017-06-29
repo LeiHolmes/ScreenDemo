@@ -144,10 +144,34 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 }
                 break;
             case R.id.show://跳转播放录屏Activity
-                startActivity(new Intent(this, ShowMediaActivity.class));
+//                startActivity(new Intent(this, ShowMediaActivity.class));
+                Log.e("file_path", "" + getVideoPath(file_path));
                 break;
         }
     }
+
+    private String getVideoPath(String url) {
+        Log.e("kkk", "1--url=" + url);
+        String tempVideoPath = null;
+        //判断sd卡是否存在
+        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED) && url != null) {
+            File file = new File(url);
+            if (file.exists()) {
+                File[] videoFiles = file.listFiles();
+                Log.e("kkk", "4-videoFiles.length=" + videoFiles.length);
+                for (int i = 0; i < videoFiles.length; i++) {
+                    if (videoFiles[i] != null) {
+                        tempVideoPath = videoFiles[i].getAbsolutePath();
+                        Log.e("kkk", "5--tempVideoPath=" + tempVideoPath);
+                    }
+                }
+            }
+        }
+        Log.e("kkk", "8--tempVideoPath=" + tempVideoPath);
+        return tempVideoPath;
+    }
+
+    String file_path;
 
     /**
      * 保存视频音频前清空文件夹
@@ -157,7 +181,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         if (Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED)) {
             File sdcardDir = Environment.getExternalStorageDirectory();
             //清除视频缓存
-            String file_path = sdcardDir.getPath() + VIDEO_PATH;
+            file_path = sdcardDir.getPath() + VIDEO_PATH;
             File file = new File(file_path);
             if (!file.exists()) {
                 file.mkdirs();
@@ -180,7 +204,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             }
         }
     }
-    
+
     //录屏回调
     MediaOutput output = new MediaOutput() {
         @Override
